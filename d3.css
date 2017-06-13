@@ -8,7 +8,6 @@ body {
   max-width: 80rem;
 }
 
-
 .bar {
   fill: cornflowerblue;
 }
@@ -45,16 +44,16 @@ body {
 
   .line.bands {
     stroke: #6c949f;
-    stroke-opacity: 0.2;
+    stroke-opacity: 0.0;
   }
 
-  .line.bands.ma {
-    stroke-opacity: 1;
+  .line.bands.mean {
+    stroke-opacity: 0.8;
   }
 
   .area.bands {
     fill: #6c949f;
-    fill-opacity: 0.15;
+    fill-opacity: 0.1;
     stroke: none;
   }
 
