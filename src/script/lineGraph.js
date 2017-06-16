@@ -18,18 +18,9 @@ var yAxis = d3.axisLeft()
   .tickSize(3, 0);
 
 
-var line = d3.line()
-  .x(function(d) { return x(d.date); })
-  .y(function(d) { return y(d[config.loc].mean); });
 var mean = d3.line()
   .x(function(d) { return x(d.date); })
   .y(function(d) { return y(d.mean); });
-var lowBand = d3.line()
-  .x(function(d) { return x(d.date); })
-  .y(function(d) { return y(d.low); });
-var highBand = d3.line()
-  .x(function(d) { return x(d.date); })
-  .y(function(d) { return y(d.high); });
 var bandsArea = d3.area()
   .x(function(d) { return x(d.date); })
   .y0(function(d) { return y(d.low); })
@@ -59,14 +50,6 @@ export default function (data) {
     .datum(bandsData)
     .attr("class", "area bands")
     .attr("d", bandsArea);
-  svg.append("path")
-    .datum(bandsData)
-    .attr("class", "line bands")
-    .attr("d", lowBand);
-  svg.append("path")
-    .datum(bandsData)
-    .attr("class", "line bands")
-    .attr("d", highBand);
 
   svg.append("path")
     .datum(bandsData)
@@ -79,8 +62,6 @@ export default function (data) {
     .enter().append("circle")
       .attr("class", "scatterplot dot")
       .attr("r", 1)
-      // .style("fill", function(d) {
-      //   return colors[d[config.loc].mean - 1]; })
       .attr("cx", function(d) { return x(d.date); })
       .attr("cy", function(d) { return y(d[config.loc].mean); });
 };

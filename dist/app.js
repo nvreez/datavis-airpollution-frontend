@@ -82,25 +82,10 @@ var y = d3.scaleLinear().domain([0, 11]).range([height, 0]);
 var xAxis = d3.axisBottom().scale(x);
 var yAxis = d3.axisLeft().scale(y).tickSize(3, 0);
 
-var line = d3.line().x(function (d) {
-  return x(d.date);
-}).y(function (d) {
-  return y(d[config.loc].mean);
-});
 var mean = d3.line().x(function (d) {
   return x(d.date);
 }).y(function (d) {
   return y(d.mean);
-});
-var lowBand = d3.line().x(function (d) {
-  return x(d.date);
-}).y(function (d) {
-  return y(d.low);
-});
-var highBand = d3.line().x(function (d) {
-  return x(d.date);
-}).y(function (d) {
-  return y(d.high);
 });
 var bandsArea = d3.area().x(function (d) {
   return x(d.date);
@@ -123,16 +108,11 @@ var svg = d3.select(".chart").attr("width", width + margin.left + margin.right).
   svg.append("g").attr("class", "y axis").call(yAxis);
 
   svg.append("path").datum(bandsData).attr("class", "area bands").attr("d", bandsArea);
-  svg.append("path").datum(bandsData).attr("class", "line bands").attr("d", lowBand);
-  svg.append("path").datum(bandsData).attr("class", "line bands").attr("d", highBand);
 
   svg.append("path").datum(bandsData).attr("class", "line mean bands").attr("d", mean);
 
   // Add the scatterplot
-  svg.selectAll("circle").data(data).enter().append("circle").attr("class", "scatterplot dot").attr("r", 1
-  // .style("fill", function(d) {
-  //   return colors[d[config.loc].mean - 1]; })
-  ).attr("cx", function (d) {
+  svg.selectAll("circle").data(data).enter().append("circle").attr("class", "scatterplot dot").attr("r", 1).attr("cx", function (d) {
     return x(d.date);
   }).attr("cy", function (d) {
     return y(d[config.loc].mean);
