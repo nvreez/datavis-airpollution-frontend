@@ -90,10 +90,8 @@ window.config = {
 };
 
 d3.json(config.api + "locations", function (error, data) {
-  config.locs = data.map(d => {
-    return d.name;
-  });
-  config.loc = config.locs[0] || config.loc;
+  config.locs = data;
+  config.loc = config.locs[0]['name'] || config.loc;
 
   __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__locationSelect__["a" /* initLocationSelect */])(config.locs);
 });
@@ -129,8 +127,10 @@ var options = select.selectAll('option');
 var locationChange = new __WEBPACK_IMPORTED_MODULE_0__Observer__["a" /* default */]();
 
 function initLocationSelect(data) {
-  options.data(data).enter().append('option').text(function (d) {
-    return d;
+  options.data(data).enter().append('option').attr('value', function (d) {
+    return d['name'];
+  }).text(function (d) {
+    return d['pretty_name'];
   });
 
   return select;

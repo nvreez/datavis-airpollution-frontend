@@ -11,7 +11,8 @@ function initLocationSelect (data) {
   options
     .data(data).enter()
     .append('option')
-      .text(function (d) { return d; });
+      .attr('value', function (d) { return d['name']; })
+      .text(function (d) { return d['pretty_name']; });
 
   return select;
 }

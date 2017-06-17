@@ -12,8 +12,8 @@ window.config = {
 };
 
 d3.json(config.api + "locations", function(error, data) {
-  config.locs = data.map(d => { return d.name });
-  config.loc = config.locs[0] || config.loc;
+  config.locs = data;
+  config.loc = config.locs[0]['name'] || config.loc;
 
   initLocationSelect(config.locs);
 });
