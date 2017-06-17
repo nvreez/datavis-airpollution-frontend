@@ -6,9 +6,9 @@
   "scripts": {
     "prebuild:css": "node-sass --include-path scss src/style/main.scss dist/style.css -w",
     "build:css": "postcss --use autoprefixer -b 'last 2 versions' < dist/style.css",
-    "build:js": "webpack './src/script/app.js' './dist/app.js' --module-bind js=babel-loader -w",
+    "build:js": "webpack \"./src/script/app.js\" \"./dist/app.js\" --module-bind js=babel-loader -w",
     "build": "npm run prebuild:css && npm run build:js",
-    "dev": "parallelshell 'npm run build:css' 'npm run build:js' 'npm run serve'",
+    "dev": "parallelshell \"npm run build:css\" \"npm run build:js\" \"npm run serve\"",
     "serve": "browser-sync start --server --files 'dist/*.css, dist/*.js'"
   },
   "repository": {

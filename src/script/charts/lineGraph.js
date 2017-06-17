@@ -1,7 +1,9 @@
+import { locationChange } from '../locationSelect';
+var data;
 
 var margin = { top: 20, right: 20, bottom: 30, left: 50 },
-width = 1280 - margin.left - margin.right,
-height = 500 - margin.top - margin.bottom;
+  width = 1280 - margin.left - margin.right,
+  height = 500 - margin.top - margin.bottom;
 
 
 var x = d3.scaleTime()
@@ -33,8 +35,10 @@ var svg = d3.select(".chart")
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-export default function (data) {
-  const bandsData = getBollingerBands(config.n, config.k, data);
+
+export default function (d, location) {
+  data = d;
+  const bandsData = getBollingerBands(config.n, config.k, data, location);
 
   x.domain(d3.extent(data, function(d) { return d.date; }));
 
@@ -48,7 +52,7 @@ export default function (data) {
 
   svg.append("path")
     .datum(bandsData)
-    .attr("class", "area bands")
+    .attr("class", "area bands deviation")
     .attr("d", bandsArea);
 
   svg.append("path")
@@ -63,16 +67,42 @@ export default function (data) {
       .attr("class", "scatterplot dot")
       .attr("r", 1)
       .attr("cx", function(d) { return x(d.date); })
-      .attr("cy", function(d) { return y(d[config.loc].mean); });
-};
+      .attr("cy", function(d) { return y(d[location].mean); });
+}
 
-function getBollingerBands(n, k, data) {
+
+locationChange.subscribe(update);
+
+function update(location) {
+  const bandsData = getBollingerBands(config.n, config.k, data, location);
+
+  console.log("yay", svg.select(".deviation"));
+
+  svg.select(".deviation")
+    .datum(bandsData)
+    .transition().duration(1000)
+    .attr("d", bandsArea);
+
+  svg.select(".mean")
+    .datum(bandsData)
+    .transition().duration(1000)
+    .attr("d", mean);
+
+  // Add the scatterplot
+  svg.selectAll(".scatterplot")
+    .data(data)
+    .transition().duration(1000)
+      .attr("cx", function(d) { return x(d.date); })
+      .attr("cy", function(d) { return y(d[location].mean); });
+}
+
+function getBollingerBands(n, k, data, location) {
   var bands = [];
   for (var i = 1, len = data.length; i < len; i++) {
     var slice = data.slice(Math.max(i + 1 - n, 0), i);
-    var mean = d3.mean(slice, function(d) { return d[config.loc].mean; });
+    var mean = d3.mean(slice, function(d) { return d[location].mean; });
     var stdDev = Math.sqrt(d3.mean(slice.map(function(d) {
-      return Math.pow(d[config.loc].mean - mean, 2);
+      return Math.pow(d[location].mean - mean, 2);
     })));
     bands.push({ date: data[i].date,
      mean: mean,

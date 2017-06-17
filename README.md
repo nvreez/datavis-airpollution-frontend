@@ -1,5 +1,7 @@
 # datavis-airpollution-frontend
 
+Datavisualisation experiments on airquality data for Hong Kong. Frontend for https://github.com/rjh622/datavis-airpollution.
+
 ## Run
 
 To run you just need to launch any kind of webserver in the root of the project. We're using `/index.html`, using resources from `/dist`. If you have php installed (installed by default on Mac) you can run `php -S 0.0.0.0:8080` as a quick test server.
