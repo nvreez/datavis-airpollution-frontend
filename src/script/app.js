@@ -1,15 +1,22 @@
 import { initLocationSelect } from './locationSelect';
 import lineGraph from './charts/lineGraph';
+import barChart from './charts/barChart';
 
 window.config = {
   locs: [],
-  colors: ["#83E827", "#3DBA32", "#03943B", "#FFD91B", "#FFA51C", "#FC7D1F", "#E91B33", "#B6005C", "#88007D", "#63008C", "#5D0021"],
+  colorScale: d3.scaleLinear()
+    .domain([0, 4, 7, 10, 11])
+    .range(["#00BAC4", "#ffff8c", "#d7191c", "#63008C", "#5D0021"])
+    .interpolate(d3.interpolateHcl),
   api: "http://127.0.0.1:8088/api/",
   loc: "central",
 
   n: 24, // n-period of moving average
   k: 2 // k times n-period standard deviation above/below moving average
 };
+
+// http://bl.ocks.org/nbremer/a43dbd5690ccd5ac4c6cc392415140e7
+
 
 d3.json(config.api + "locations", function(error, data) {
   config.locs = data;
@@ -21,7 +28,13 @@ d3.json(config.api + "locations", function(error, data) {
 d3.json(config.api + "pollution-records?from=20160601&to=20170501&granularity=1", function(error, data) {
   data = dateType(data);
 
-  lineGraph(data, config.loc);
+  lineGraph(data, config.loc, ".line-chart");
+});
+
+d3.json(config.api + "pollution-records?from=20160601&to=20170501&granularity=24", function(error, data) {
+  data = dateType(data);
+
+  barChart(data, config.loc, ".bar-chart");
 });
 
 

@@ -3,7 +3,7 @@ var data, svg;
 
 var margin = { top: 20, right: 20, bottom: 30, left: 50 },
   width = 1280 - margin.left - margin.right,
-  height = 500 - margin.top - margin.bottom;
+  height = 200 - margin.top - margin.bottom;
 
 
 var x = d3.scaleTime()
@@ -20,24 +20,14 @@ var yAxis = d3.axisLeft()
   .tickSize(3, 0);
 
 
-var mean = d3.line()
-  .x(function(d) { return x(d.date); })
-  .y(function(d) { return y(d.mean); });
-var bandsArea = d3.area()
-  .x(function(d) { return x(d.date); })
-  .y0(function(d) { return y(d.low); })
-  .y1(function(d) { return y(d.high); });
-
-
 export default function (d, location, selector) {
   svg = d3.select(selector)
               .attr("width", width + margin.left + margin.right)
               .attr("height", height + margin.top + margin.bottom)
               .append("g")
               .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-  data = d;
 
-  const bandsData = getBollingerBands(config.n, config.k, data, location);
+  data = d;
 
   x.domain(d3.extent(data, function(d) { return d.date; }));
 
@@ -49,50 +39,29 @@ export default function (d, location, selector) {
     .attr("class", "y axis")
     .call(yAxis);
 
-  svg.append("path")
-    .datum(bandsData)
-    .attr("class", "area bands deviation")
-    .attr("d", bandsArea);
-
-  svg.append("path")
-    .datum(bandsData)
-    .attr("class", "line mean bands")
-    .attr("d", mean);
-
-  // Add the scatterplot
-  svg.selectAll("circle")
-    .data(data)
-    .enter().append("circle")
-      .attr("class", "scatterplot dot")
-      .attr("r", 1)
-      .attr("cx", function(d) { return x(d.date); })
-      .attr("cy", function(d) { return y(d[location].mean); });
+  svg.append("g").selectAll("rect")
+      .data(data)
+    .enter().append("rect")
+      .attr("class", "rect bar color-scale")
+      .attr("x", function(d) { return x(d.date) })
+      .attr("y", function(d) { return y(d[location].min) - y(d[location].max) ? y(d[location].max) : y(d[location].max) - 0.5; })
+      .attr("height", function(d) { return y(d[location].min) - y(d[location].max) || 1; })
+      .attr("width", width/data.length)
+      .style("fill", function(d) { return config.colorScale(d[location].mean); });
 }
 
 
 locationChange.subscribe(update);
 
 function update(location) {
-  const bandsData = getBollingerBands(config.n, config.k, data, location);
-
-  console.log("yay", svg.select(".deviation"));
-
-  svg.select(".deviation")
-    .datum(bandsData)
-    .transition().duration(1000)
-    .attr("d", bandsArea);
-
-  svg.select(".mean")
-    .datum(bandsData)
-    .transition().duration(1000)
-    .attr("d", mean);
-
-  // Add the scatterplot
-  svg.selectAll(".scatterplot")
+  svg.selectAll("rect")
     .data(data)
     .transition().duration(1000)
-      .attr("cx", function(d) { return x(d.date); })
-      .attr("cy", function(d) { return y(d[location].mean); });
+      .attr("x", function(d) { return x(d.date) })
+      .attr("y", function(d) { return y(d[location].min) - y(d[location].max) ? y(d[location].max) : y(d[location].max) - 0.5; })
+      .attr("height", function(d) { return y(d[location].min) - y(d[location].max) || 1; })
+      .attr("width", width/data.length)
+      .style("fill", function(d) { return config.colorScale(d[location].mean); });
 }
 
 function getBollingerBands(n, k, data, location) {

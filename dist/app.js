@@ -63,61 +63,17 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 2);
+/******/ 	return __webpack_require__(__webpack_require__.s = 3);
 /******/ })
 /************************************************************************/
 /******/ ([
-/* 0 */,
-/* 1 */,
-/* 2 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__locationSelect__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__charts_lineGraph__ = __webpack_require__(5);
-
-
-
-window.config = {
-  locs: [],
-  colors: ["#83E827", "#3DBA32", "#03943B", "#FFD91B", "#FFA51C", "#FC7D1F", "#E91B33", "#B6005C", "#88007D", "#63008C", "#5D0021"],
-  api: "http://127.0.0.1:8088/api/",
-  loc: "central",
-
-  n: 24, // n-period of moving average
-  k: 2 // k times n-period standard deviation above/below moving average
-};
-
-d3.json(config.api + "locations", function (error, data) {
-  config.locs = data;
-  config.loc = config.locs[0]['name'] || config.loc;
-
-  __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__locationSelect__["a" /* initLocationSelect */])(config.locs);
-});
-
-d3.json(config.api + "pollution-records?from=20160601&to=20170501&granularity=1", function (error, data) {
-  data = dateType(data);
-
-  __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__charts_lineGraph__["a" /* default */])(data, config.loc);
-});
-
-function dateType(d) {
-  for (var i = d.length - 1; i >= 0; i--) {
-    var hour = ("0" + d[i].startHour).slice(-2);
-    d[i].date = new Date(d[i].startDate + "T" + hour + ":00:00");
-  }
-  return d;
-}
-
-/***/ }),
-/* 3 */
+/* 0 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return initLocationSelect; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return locationChange; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Observer__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Observer__ = __webpack_require__(2);
 
 
 var select = d3.select('#locationSelect').on('change', onchange);
@@ -145,46 +101,13 @@ function onchange() {
 
 
 /***/ }),
-/* 4 */
+/* 1 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-function Observer() {
-    this.handlers = []; // observers
-}
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__locationSelect__ = __webpack_require__(0);
 
-Observer.prototype = {
-
-    subscribe: function (fn) {
-        this.handlers.push(fn);
-    },
-
-    unsubscribe: function (fn) {
-        this.handlers = this.handlers.filter(function (item) {
-            if (item !== fn) {
-                return item;
-            }
-        });
-    },
-
-    fire: function (o, thisObj) {
-        var scope = thisObj || window;
-        this.handlers.forEach(function (item) {
-            item.call(scope, o);
-        });
-    }
-};
-
-/* harmony default export */ __webpack_exports__["a"] = (Observer);
-
-/***/ }),
-/* 5 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__locationSelect__ = __webpack_require__(3);
-
-var data;
+var data, svg;
 
 var margin = { top: 20, right: 20, bottom: 30, left: 50 },
     width = 1280 - margin.left - margin.right,
@@ -209,10 +132,10 @@ var bandsArea = d3.area().x(function (d) {
   return y(d.high);
 });
 
-var svg = d3.select(".chart").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-/* harmony default export */ __webpack_exports__["a"] = (function (d, location) {
+/* harmony default export */ __webpack_exports__["a"] = (function (d, location, selector) {
+  svg = d3.select(selector).attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
   data = d;
+
   const bandsData = getBollingerBands(config.n, config.k, data, location);
 
   x.domain(d3.extent(data, function (d) {
@@ -250,6 +173,166 @@ function update(location) {
     return x(d.date);
   }).attr("cy", function (d) {
     return y(d[location].mean);
+  });
+}
+
+function getBollingerBands(n, k, data, location) {
+  var bands = [];
+  for (var i = 1, len = data.length; i < len; i++) {
+    var slice = data.slice(Math.max(i + 1 - n, 0), i);
+    var mean = d3.mean(slice, function (d) {
+      return d[location].mean;
+    });
+    var stdDev = Math.sqrt(d3.mean(slice.map(function (d) {
+      return Math.pow(d[location].mean - mean, 2);
+    })));
+    bands.push({ date: data[i].date,
+      mean: mean,
+      low: mean - k * stdDev,
+      high: mean + k * stdDev });
+  }
+  return bands;
+}
+
+/***/ }),
+/* 2 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+function Observer() {
+    this.handlers = []; // observers
+}
+
+Observer.prototype = {
+
+    subscribe: function (fn) {
+        this.handlers.push(fn);
+    },
+
+    unsubscribe: function (fn) {
+        this.handlers = this.handlers.filter(function (item) {
+            if (item !== fn) {
+                return item;
+            }
+        });
+    },
+
+    fire: function (o, thisObj) {
+        var scope = thisObj || window;
+        this.handlers.forEach(function (item) {
+            item.call(scope, o);
+        });
+    }
+};
+
+/* harmony default export */ __webpack_exports__["a"] = (Observer);
+
+/***/ }),
+/* 3 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__locationSelect__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__charts_lineGraph__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__charts_barChart__ = __webpack_require__(4);
+
+
+
+
+window.config = {
+  locs: [],
+  colorScale: d3.scaleLinear().domain([0, 4, 7, 10, 11]).range(["#00BAC4", "#ffff8c", "#d7191c", "#63008C", "#5D0021"]).interpolate(d3.interpolateHcl),
+  api: "http://127.0.0.1:8088/api/",
+  loc: "central",
+
+  n: 24, // n-period of moving average
+  k: 2 // k times n-period standard deviation above/below moving average
+};
+
+// http://bl.ocks.org/nbremer/a43dbd5690ccd5ac4c6cc392415140e7
+
+
+d3.json(config.api + "locations", function (error, data) {
+  config.locs = data;
+  config.loc = config.locs[0]['name'] || config.loc;
+
+  __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__locationSelect__["a" /* initLocationSelect */])(config.locs);
+});
+
+d3.json(config.api + "pollution-records?from=20160601&to=20170501&granularity=1", function (error, data) {
+  data = dateType(data);
+
+  __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__charts_lineGraph__["a" /* default */])(data, config.loc, ".line-chart");
+});
+
+d3.json(config.api + "pollution-records?from=20160601&to=20170501&granularity=24", function (error, data) {
+  data = dateType(data);
+
+  __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__charts_barChart__["a" /* default */])(data, config.loc, ".bar-chart");
+});
+
+function dateType(d) {
+  for (var i = d.length - 1; i >= 0; i--) {
+    var hour = ("0" + d[i].startHour).slice(-2);
+    d[i].date = new Date(d[i].startDate + "T" + hour + ":00:00");
+  }
+  return d;
+}
+
+/***/ }),
+/* 4 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__locationSelect__ = __webpack_require__(0);
+
+var data, svg;
+
+var margin = { top: 20, right: 20, bottom: 30, left: 50 },
+    width = 1280 - margin.left - margin.right,
+    height = 200 - margin.top - margin.bottom;
+
+var x = d3.scaleTime().range([0, width]);
+var y = d3.scaleLinear().domain([0, 11]).range([height, 0]);
+
+var xAxis = d3.axisBottom().scale(x);
+var yAxis = d3.axisLeft().scale(y).tickSize(3, 0);
+
+/* harmony default export */ __webpack_exports__["a"] = (function (d, location, selector) {
+  svg = d3.select(selector).attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  data = d;
+
+  x.domain(d3.extent(data, function (d) {
+    return d.date;
+  }));
+
+  svg.append("g").attr("class", "x axis").attr("transform", "translate(0," + height + ")").call(xAxis);
+  svg.append("g").attr("class", "y axis").call(yAxis);
+
+  svg.append("g").selectAll("rect").data(data).enter().append("rect").attr("class", "rect bar color-scale").attr("x", function (d) {
+    return x(d.date);
+  }).attr("y", function (d) {
+    return y(d[location].min) - y(d[location].max) ? y(d[location].max) : y(d[location].max) - 0.5;
+  }).attr("height", function (d) {
+    return y(d[location].min) - y(d[location].max) || 1;
+  }).attr("width", width / data.length).style("fill", function (d) {
+    return config.colorScale(d[location].mean);
+  });
+});
+
+__WEBPACK_IMPORTED_MODULE_0__locationSelect__["b" /* locationChange */].subscribe(update);
+
+function update(location) {
+  svg.selectAll("rect").data(data).transition().duration(1000).attr("x", function (d) {
+    return x(d.date);
+  }).attr("y", function (d) {
+    return y(d[location].min) - y(d[location].max) ? y(d[location].max) : y(d[location].max) - 0.5;
+  }).attr("height", function (d) {
+    return y(d[location].min) - y(d[location].max) || 1;
+  }).attr("width", width / data.length).style("fill", function (d) {
+    return config.colorScale(d[location].mean);
   });
 }
 
