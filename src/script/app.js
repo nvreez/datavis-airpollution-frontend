@@ -8,6 +8,7 @@ window.config = {
     .domain([0, 4, 7, 10, 11])
     .range(["#00BAC4", "#ffff8c", "#d7191c", "#63008C", "#5D0021"])
     .interpolate(d3.interpolateHcl),
+  // api: "http://139.162.63.93:8088/api/",
   api: "http://127.0.0.1:8088/api/",
   loc: "central",
 
@@ -40,8 +41,7 @@ d3.json(config.api + "pollution-records?from=20160601&to=20170501&granularity=24
 
 function dateType(d) {
   for (var i = d.length - 1; i >= 0; i--) {
-    var hour = ("0" + d[i].startHour).slice(-2);
-    d[i].date = new Date(d[i].startDate + "T" + hour + ":00:00");
+    d[i].date = new Date(d[i].start);
   }
   return d;
 }
