@@ -1,0 +1,20 @@
+html {
+  font: 100%/1.44 'Source Sans Pro', sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0 0.5em;
+}
+
+/* https://github.com/Heydon/fukol-grids */
+.grid {
+  display: flex; /* 1 */
+  flex-wrap: wrap; /* 2 */
+  margin: -0.5em; /* 5 (edit me!) */
+}
+
+.grid > * {
+  flex: 1 0 5em; /* 3 (edit me!) */
+  margin: 0.5em; /* 4 (edit me!) */
+}

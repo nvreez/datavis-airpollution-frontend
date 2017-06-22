@@ -1,37 +1,19 @@
 {
-  "name": "datavis-airpollution-frontend",
-  "version": "1.0.0",
-  "description": "Data-visualisation experiment using Hong Kong pollution data",
-  "main": "app.js",
-  "scripts": {
-    "prebuild:css": "node-sass --include-path scss src/style/main.scss dist/style.css -w",
-    "build:css": "postcss --use autoprefixer -b 'last 2 versions' < dist/style.css",
-    "build:js": "webpack \"./src/script/app.js\" \"./dist/app.js\" --module-bind js=babel-loader -w",
-    "build": "npm run prebuild:css && npm run build:js",
-    "dev": "parallelshell \"npm run build:css\" \"npm run build:js\" \"npm run serve\"",
-    "serve": "browser-sync start --server --files 'dist/*.css, dist/*.js'"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/rjh622/datavis-airpollution-frontend.git"
-  },
-  "author": "Nathan de Vries & RJ Harden",
-  "license": "ISC",
+  "name": "test",
+  "version": "0.1.0",
   "private": true,
-  "bugs": {
-    "url": "https://github.com/rjh622/datavis-airpollution-frontend/issues"
+  "dependencies": {
+    "react": "^15.6.1",
+    "react-dom": "^15.6.1",
+    "d3": ""
   },
-  "homepage": "https://github.com/rjh622/datavis-airpollution-frontend#readme",
   "devDependencies": {
-    "autoprefixer": "^7.1.1",
-    "babel-core": "^6.25.0",
-    "babel-loader": "^7.0.0",
-    "browser-sync": "^2.18.12",
-    "node-sass": "^4.5.3",
-    "parallelshell": "^2.0.0",
-    "postcss": "^6.0.2",
-    "postcss-cli": "^4.1.0",
-    "watch": "^1.0.2",
-    "webpack": "^2.6.1"
+    "react-scripts": "1.0.7"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
   }
 }
