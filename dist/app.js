@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 3);
+/******/ 	return __webpack_require__(__webpack_require__.s = 4);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -73,7 +73,7 @@
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return initLocationSelect; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return locationChange; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Observer__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Observer__ = __webpack_require__(3);
 
 
 var select = d3.select('#locationSelect').on('change', onchange);
@@ -102,6 +102,80 @@ function onchange() {
 
 /***/ }),
 /* 1 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__locationSelect__ = __webpack_require__(0);
+
+var data, svg;
+
+var margin = { top: 20, right: 20, bottom: 30, left: 50 },
+    width = 1280 - margin.left - margin.right,
+    height = 200 - margin.top - margin.bottom;
+
+var x = d3.scaleTime().range([0, width]);
+var y = d3.scaleLinear().domain([0, 11]).range([height, 0]);
+
+var xAxis = d3.axisBottom().scale(x);
+var yAxis = d3.axisLeft().scale(y).tickSize(3, 0);
+
+/* harmony default export */ __webpack_exports__["a"] = (function (d, location, selector) {
+  svg = d3.select(selector).attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  data = d;
+
+  x.domain(d3.extent(data, function (d) {
+    return d.date;
+  }));
+
+  svg.append("g").attr("class", "x axis").attr("transform", "translate(0," + height + ")").call(xAxis);
+  svg.append("g").attr("class", "y axis").call(yAxis);
+
+  svg.append("g").selectAll("rect").data(data).enter().append("rect").attr("class", "rect bar color-scale").attr("x", function (d) {
+    return x(d.date);
+  }).attr("y", function (d) {
+    return y(d[location].min) - y(d[location].max) ? y(d[location].max) : y(d[location].max) - 0.5;
+  }).attr("height", function (d) {
+    return y(d[location].min) - y(d[location].max) || 1;
+  }).attr("width", width / data.length).style("fill", function (d) {
+    return config.colorScale(d[location].mean);
+  });
+});
+
+__WEBPACK_IMPORTED_MODULE_0__locationSelect__["b" /* locationChange */].subscribe(update);
+
+function update(location) {
+  svg.selectAll("rect").data(data).transition().duration(1000).attr("x", function (d) {
+    return x(d.date);
+  }).attr("y", function (d) {
+    return y(d[location].min) - y(d[location].max) ? y(d[location].max) : y(d[location].max) - 0.5;
+  }).attr("height", function (d) {
+    return y(d[location].min) - y(d[location].max) || 1;
+  }).attr("width", width / data.length).style("fill", function (d) {
+    return config.colorScale(d[location].mean);
+  });
+}
+
+function getBollingerBands(n, k, data, location) {
+  var bands = [];
+  for (var i = 1, len = data.length; i < len; i++) {
+    var slice = data.slice(Math.max(i + 1 - n, 0), i);
+    var mean = d3.mean(slice, function (d) {
+      return d[location].mean;
+    });
+    var stdDev = Math.sqrt(d3.mean(slice.map(function (d) {
+      return Math.pow(d[location].mean - mean, 2);
+    })));
+    bands.push({ date: data[i].date,
+      mean: mean,
+      low: mean - k * stdDev,
+      high: mean + k * stdDev });
+  }
+  return bands;
+}
+
+/***/ }),
+/* 2 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -195,7 +269,7 @@ function getBollingerBands(n, k, data, location) {
 }
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -228,22 +302,29 @@ Observer.prototype = {
 /* harmony default export */ __webpack_exports__["a"] = (Observer);
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__locationSelect__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__charts_lineGraph__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__charts_barChart__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__charts_lineGraph__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__charts_barChart__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__charts_heatmap__ = __webpack_require__(5);
+
 
 
 
 
 window.config = {
   locs: [],
-  colorScale: d3.scaleLinear().domain([0, 4, 7, 10, 11]).range(["#00BAC4", "#ffff8c", "#d7191c", "#63008C", "#5D0021"]).interpolate(d3.interpolateHcl),
-  api: "http://127.0.0.1:8088/api/",
+  // colorScale: d3.scaleLinear()
+  //   .domain([0, 4, 7, 10, 11])
+  //   .range(["#00BAC4", "#ffff8c", "#d7191c", "#63008C", "#5D0021"])
+  //   .interpolate(d3.interpolateHcl),
+  colorScale: d3.scaleLinear().domain(d3.range(1, 11, 1)).range(["#87cefa", "#86c6ef", "#85bde4", "#83b7d9", "#82afce", "#80a6c2", "#7e9fb8", "#7995aa", "#758b9e", "#708090"]),
+  api: "http://139.162.63.93:8088/api/",
+  // api: "http://127.0.0.1:8088/api/",
   loc: "central",
 
   n: 24, // n-period of moving average
@@ -272,87 +353,134 @@ d3.json(config.api + "pollution-records?from=20160601&to=20170501&granularity=24
   __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__charts_barChart__["a" /* default */])(data, config.loc, ".bar-chart");
 });
 
+d3.json("./test.json", function (error, data) {
+  data.forEach(function (d) {
+    d.day = +d.day;
+    d.hour = +d.hour;
+    d.value = +d.value;
+  });
+
+  __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__charts_heatmap__["a" /* default */])(data, ".heatmap");
+});
+
 function dateType(d) {
   for (var i = d.length - 1; i >= 0; i--) {
-    var hour = ("0" + d[i].startHour).slice(-2);
-    d[i].date = new Date(d[i].startDate + "T" + hour + ":00:00");
+    d[i].date = new Date(d[i].start);
   }
   return d;
 }
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__locationSelect__ = __webpack_require__(0);
-
 var data, svg;
 
-var margin = { top: 20, right: 20, bottom: 30, left: 50 },
-    width = 1280 - margin.left - margin.right,
-    height = 200 - margin.top - margin.bottom;
+var days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    times = d3.range(24);
 
-var x = d3.scaleTime().range([0, width]);
-var y = d3.scaleLinear().domain([0, 11]).range([height, 0]);
+var margin = { top: 40, right: 50, bottom: 70, left: 50 };
 
-var xAxis = d3.axisBottom().scale(x);
-var yAxis = d3.axisLeft().scale(y).tickSize(3, 0);
+var w = Math.max(Math.min(window.innerWidth, 1280), 500) - margin.left - margin.right - 20;
+var gridSize = Math.floor(w / times.length);
+var h = gridSize * (days.length + 2);
 
-/* harmony default export */ __webpack_exports__["a"] = (function (d, location, selector) {
-  svg = d3.select(selector).attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+/* harmony default export */ __webpack_exports__["a"] = (function (d, selector) {
+  svg = d3.select(".heatmap").attr("width", w + margin.top + margin.bottom).attr("height", h + margin.left + margin.right).append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
   data = d;
 
-  x.domain(d3.extent(data, function (d) {
-    return d.date;
-  }));
+  var dayLabels = svg.selectAll(".dayLabel").data(days).enter().append("text").text(function (d) {
+    return d;
+  }).attr("class", "dayLabel").attr("x", 0).attr("y", function (d, i) {
+    return i * gridSize;
+  }).style("text-anchor", "end").attr("transform", "translate(-6," + gridSize / 1.5 + ")");
 
-  svg.append("g").attr("class", "x axis").attr("transform", "translate(0," + height + ")").call(xAxis);
-  svg.append("g").attr("class", "y axis").call(yAxis);
+  var timeLabels = svg.selectAll(".timeLabel").data(times).enter().append("text").text(function (d) {
+    return d;
+  }).attr("class", "timeLabel").attr("x", function (d, i) {
+    return i * gridSize;
+  }).attr("y", 0).style("text-anchor", "middle").attr("transform", "translate(" + gridSize / 2 + ", -6)");
 
-  svg.append("g").selectAll("rect").data(data).enter().append("rect").attr("class", "rect bar color-scale").attr("x", function (d) {
-    return x(d.date);
-  }).attr("y", function (d) {
-    return y(d[location].min) - y(d[location].max) ? y(d[location].max) : y(d[location].max) - 0.5;
-  }).attr("height", function (d) {
-    return y(d[location].min) - y(d[location].max) || 1;
-  }).attr("width", width / data.length).style("fill", function (d) {
-    return config.colorScale(d[location].mean);
+  var nest = d3.nest().key(function (d) {
+    return d.location;
+  }).entries(data);
+
+  // return an array of locations in the data
+  var locations = nest.map(function (d) {
+    return d.key;
+  });
+  var currentLocationIndex = 0;
+
+  // create location dropdown menu
+  var locationMenu = d3.select("#locationDropdown");
+  locationMenu.append("select").attr("id", "locationMenu").selectAll("option").data(locations).enter().append("option").attr("value", function (d, i) {
+    return i;
+  }).text(function (d) {
+    return d;
+  });
+
+  // function to create the initial heatmap
+  var drawHeatmap = function (location) {
+
+    // filter the data to return object of location of interest
+    var selectLocation = nest.find(function (d) {
+      return d.key == location;
+    });
+    // console.log(selectLocation);
+
+    var heatmap = svg.selectAll(".hour").data(selectLocation.values).enter().append("rect").attr("x", function (d) {
+      return (d.hour - 1) * gridSize;
+    }).attr("y", function (d) {
+      return (d.day - 1) * gridSize;
+    }).attr("class", "hour bordered").attr("width", gridSize).attr("height", gridSize).style("stroke", "white").style("stroke-opacity", 0.6).style("fill", function (d) {
+      return config.colorScale(d.value);
+    });
+  };
+  drawHeatmap(locations[currentLocationIndex]);
+
+  var updateHeatmap = function (location) {
+    // filter data to return object of location of interest
+    var selectLocation = nest.find(function (d) {
+      return d.key == location;
+    });
+
+    // update the data and redraw heatmap
+    var heatmap = svg.selectAll(".hour").data(selectLocation.values).transition().duration(500).style("fill", function (d) {
+      return config.colorScale(d.value);
+    });
+  };
+
+  // run update function when dropdown selection changes
+  locationMenu.on("change", function () {
+    // find which location was selected from the dropdown
+    var selectedLocation = d3.select(this).select("select").property("value");
+    currentLocationIndex = +selectedLocation;
+    // run update function with selected location
+    updateHeatmap(locations[currentLocationIndex]);
+    console.log("currentLocationIndex: " + currentLocationIndex);
+  });
+
+  d3.selectAll(".nav").on("click", function () {
+    if (d3.select(this).classed("left")) {
+      if (currentLocationIndex == 0) {
+        currentLocationIndex = locations.length - 1;
+      } else {
+        currentLocationIndex--;
+      }
+    } else if (d3.select(this).classed("right")) {
+      if (currentLocationIndex == locations.length - 1) {
+        currentLocationIndex = 0;
+      } else {
+        currentLocationIndex++;
+      }
+    }
+    d3.select("#locationMenu").property("value", currentLocationIndex);
+    updateHeatmap(locations[currentLocationIndex]);
+    console.log("currentLocationIndex: " + currentLocationIndex);
   });
 });
-
-__WEBPACK_IMPORTED_MODULE_0__locationSelect__["b" /* locationChange */].subscribe(update);
-
-function update(location) {
-  svg.selectAll("rect").data(data).transition().duration(1000).attr("x", function (d) {
-    return x(d.date);
-  }).attr("y", function (d) {
-    return y(d[location].min) - y(d[location].max) ? y(d[location].max) : y(d[location].max) - 0.5;
-  }).attr("height", function (d) {
-    return y(d[location].min) - y(d[location].max) || 1;
-  }).attr("width", width / data.length).style("fill", function (d) {
-    return config.colorScale(d[location].mean);
-  });
-}
-
-function getBollingerBands(n, k, data, location) {
-  var bands = [];
-  for (var i = 1, len = data.length; i < len; i++) {
-    var slice = data.slice(Math.max(i + 1 - n, 0), i);
-    var mean = d3.mean(slice, function (d) {
-      return d[location].mean;
-    });
-    var stdDev = Math.sqrt(d3.mean(slice.map(function (d) {
-      return Math.pow(d[location].mean - mean, 2);
-    })));
-    bands.push({ date: data[i].date,
-      mean: mean,
-      low: mean - k * stdDev,
-      high: mean + k * stdDev });
-  }
-  return bands;
-}
 
 /***/ })
 /******/ ]);

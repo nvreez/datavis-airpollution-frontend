@@ -1,5 +1,6 @@
 html {
-  font: 1em/1.4 sans-serif; }
+  font-family: 'Source Sans Pro', sans-serif;
+  fill: #696969; }
 
 body {
   margin: 1rem auto;
@@ -54,3 +55,19 @@ body {
   stroke-width: 1px;
   stroke-opacity: 0.6;
   stroke: none; }
+
+.timeLabel, .dayLabel {
+  font-size: 0.8em;
+  font-weight: 300; }
+
+#nav-container {
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8em; }
+
+#nav-container .left {
+  margin-right: 20px; }
+
+#nav-container .right {
+  margin-left: 20px; }

@@ -1,15 +1,19 @@
 import { initLocationSelect } from './locationSelect';
 import lineGraph from './charts/lineGraph';
 import barChart from './charts/barChart';
+import heatmap from './charts/heatmap';
 
 window.config = {
   locs: [],
+  // colorScale: d3.scaleLinear()
+  //   .domain([0, 4, 7, 10, 11])
+  //   .range(["#00BAC4", "#ffff8c", "#d7191c", "#63008C", "#5D0021"])
+  //   .interpolate(d3.interpolateHcl),
   colorScale: d3.scaleLinear()
-    .domain([0, 4, 7, 10, 11])
-    .range(["#00BAC4", "#ffff8c", "#d7191c", "#63008C", "#5D0021"])
-    .interpolate(d3.interpolateHcl),
-  // api: "http://139.162.63.93:8088/api/",
-  api: "http://127.0.0.1:8088/api/",
+    .domain(d3.range(1, 11, 1))
+    .range(["#87cefa", "#86c6ef", "#85bde4", "#83b7d9", "#82afce", "#80a6c2", "#7e9fb8", "#7995aa", "#758b9e", "#708090"]),
+  api: "http://139.162.63.93:8088/api/",
+  // api: "http://127.0.0.1:8088/api/",
   loc: "central",
 
   n: 24, // n-period of moving average
@@ -38,6 +42,15 @@ d3.json(config.api + "pollution-records?from=20160601&to=20170501&granularity=24
   barChart(data, config.loc, ".bar-chart");
 });
 
+d3.json("./test.json", function(error, data) {
+  data.forEach(function(d) {
+    d.day = +d.day;
+    d.hour = +d.hour;
+    d.value = +d.value;
+  });
+
+  heatmap(data, ".heatmap");
+});
 
 function dateType(d) {
   for (var i = d.length - 1; i >= 0; i--) {
