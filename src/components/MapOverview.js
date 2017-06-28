@@ -5,48 +5,84 @@ import locations from "./locations.json";
 import './MapOverview.css';
 
 class Intro extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      dimensions: {
+        width: 1500,
+        height: 1100,
+      },
+      context: {},
+    };
+    this.radius = .3;
+    this.onImgLoad = this.onImgLoad.bind(this);
+  }
+
   componentDidMount() {
-    const context = this.setContext();
-    context.selectAll('circle')
+    this.context = d3.select(this.chart);
+    this.context.selectAll('circle')
       .style('fill', 'red');
-
-    this.createPoints(context);
-    this.createLabels(context);
   }
 
-  setContext() {
-    return d3.select(this.chart);
+  setViewbox() {
+    this.context.select('svg')
+      .attr("viewBox", `0 0 ${this.state.dimensions.width} ${this.state.dimensions.height}`);
   }
 
-  createPoints(context) {
-    return context.append("g")
+  createPoints() {
+    return this.context.append("g")
         .attr("class", "locations")
       .selectAll("circle")
       .data(locations)
       .enter().append("circle")
-        .attr("r", 2.5)
-        .attr("cx", function(d) { return d.cx; })
-        .attr("cy", function(d) { return d.cy; });
+        .attr("r", this.radius + 'em')
+        .attr("cx", d => { return d.cx * this.state.dimensions.width; })
+        .attr("cy", d => { return d.cy * this.state.dimensions.height; });
   }
 
-  createLabels(context) {
-    return context.append("g")
+  createLabels() {
+    return this.context.append("g")
         .attr("class", "labels")
       .selectAll("text")
       .data(locations)
       .enter().append("text")
-        .text(function(d) { return d.label; })
-        .attr("text-anchor", function(d) { return d.labelAnchorEnd ? 'end' : 'start'; })
-        .attr("x", function(d) { return d.labelX; })
-        .attr("y", function(d) { return d.labelY; });
+        .text(d => { return d.label; })
+        .attr("text-anchor", d => { return d.labelAnchorEnd ? 'end' : 'start'; })
+        .attr("x", d => { return d.cx * this.state.dimensions.width; })
+        .attr("y", d => { return d.cy * this.state.dimensions.height; })
+        .attr("dx", d => {
+          var delta = d.labelX + this.radius * Math.sign(d.labelX);
+          return delta + 'em';
+        })
+        .attr("dy", d => {
+          var delta = d.labelY + this.radius * Math.sign(d.labelY);
+          return delta + 'em';
+        });
+  }
+
+  onImgLoad({target:img}) {
+    this.setState({
+      dimensions: {
+        height:img.height,
+        width:img.width
+      }
+    }, function(){
+      this.setViewbox();
+      this.createPoints();
+      this.createLabels();
+    });
   }
 
 
   render() {
     return (
       <figure className="map">
-        <img className="map-img" src={hkMap} alt="Map of Hong Kong" />
-        <svg className="map-locations" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 1100" ref={(c) => { this.chart = c; }}></svg>
+        <img className="map-img" src={hkMap} alt="Map of Hong Kong" onLoad={this.onImgLoad} />
+        <svg className="map-locations"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox={`0 0 ${this.state.dimensions.width} ${this.state.dimensions.height}`}
+          preserveAspectRatio="xMinYMin meet"
+          ref={(c) => { this.chart = c; }}></svg>
       </figure>
     );
   }

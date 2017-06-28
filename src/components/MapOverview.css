@@ -13,6 +13,10 @@
   right: 0;
 }
 
+.map-locations {
+  font-size: calc(0.7em + 0.25vw)
+}
+
 .map-data ellipse {
   stroke: #454545;
 }
