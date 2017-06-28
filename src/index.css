@@ -1,5 +1,6 @@
 html {
   font: 100%/1.44 'Source Sans Pro', sans-serif;
+  font-size: calc(0.9rem + 0.2vw);
 }
 
 body {
@@ -7,14 +8,44 @@ body {
   padding: 0 0.5em;
 }
 
-/* https://github.com/Heydon/fukol-grids */
-.grid {
-  display: flex; /* 1 */
-  flex-wrap: wrap; /* 2 */
-  margin: -0.5em; /* 5 (edit me!) */
+@media (min-width: 40em) {
+  /* https://github.com/Heydon/fukol-grids */
+  .grid-medium {
+    display: flex; /* 1 */
+    flex-wrap: wrap; /* 2 */
+    margin: -0.5em; /* 5 (edit me!) */
+  }
+
+  .grid-medium > * {
+    flex: 1 0 5em; /* 3 (edit me!) */
+    margin: 0.5em; /* 4 (edit me!) */
+  }
 }
 
-.grid > * {
-  flex: 1 0 5em; /* 3 (edit me!) */
-  margin: 0.5em; /* 4 (edit me!) */
+@media (min-width: 60em) {
+  /* https://github.com/Heydon/fukol-grids */
+  .grid-wide {
+    display: flex; /* 1 */
+    flex-wrap: wrap; /* 2 */
+    margin: -0.5em; /* 5 (edit me!) */
+  }
+
+  .grid-wide > * {
+    flex: 1 0 5em; /* 3 (edit me!) */
+    margin: 0.5em; /* 4 (edit me!) */
+  }
+}
+
+h1 {
+  font-size: calc(1.4em + 1.6vw);
+}
+h2 {
+  font-size: calc(1.2em + 1.5vw);
+}
+h3 {
+  font-size: calc(1.1em + 1vw);
+}
+
+h1, h2, h3 {
+  line-height: 1.2;
 }

@@ -1,3 +1,18 @@
-.intro h1 {
-  font-size: calc(1.2em + 2vw);
+@media (max-width: 60em) {
+  .intro {
+    max-width: 80ch;
+    margin: auto;
+  }
+}
+
+@media (min-width: 60em) {
+  .intro-head {
+    float: right;
+  }
+
+  .intro-text {
+    max-width: 60ch;
+    margin: auto;
+    clear: both;
+  }
 }

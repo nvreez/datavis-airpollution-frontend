@@ -1,0 +1,146 @@
+[
+  {
+    "location": "causeway_bay",
+    "cx": 891.2,
+    "cy": 709.4,
+    "labelX": 871.1455,
+    "labelY": 749.4534,
+    "labelAnchorEnd": false,
+    "label": "Causeway Bay"
+  },
+  {
+    "location": "central",
+    "cx": 824.3,
+    "cy": 711.4,
+    "labelX": 837.0836,
+    "labelY": 747.4525,
+    "labelAnchorEnd": true,
+    "label": "Central"
+  },
+  {
+    "location": "central_western",
+    "cx": 779,
+    "cy": 699.4,
+    "labelX": 761.7,
+    "labelY": 694.4064,
+    "labelAnchorEnd": true,
+    "label": "Central & Western"
+  },
+  {
+    "location": "eastern",
+    "cx": 967.3,
+    "cy": 707.4,
+    "labelX": 987.3242,
+    "labelY": 710.4202,
+    "labelAnchorEnd": false,
+    "label": "Eastern"
+  },
+  {
+    "location": "kwai_chung",
+    "cx": 774,
+    "cy": 520.3,
+    "labelX": 794.0186,
+    "labelY": 524.262,
+    "labelAnchorEnd": false,
+    "label": "Kwai Chung"
+  },
+  {
+    "location": "kwun_tong",
+    "cx": 988.3,
+    "cy": 632.4,
+    "labelX": 955.2725,
+    "labelY": 668.3841,
+    "labelAnchorEnd": false,
+    "label": "Kwun Tong"
+  },
+  {
+    "location": "mong_kok",
+    "cx": 873.1,
+    "cy": 627.4,
+    "labelX": 889.1718,
+    "labelY": 663.3792,
+    "labelAnchorEnd": true,
+    "label": "Mong Kok"
+  },
+  {
+    "location": "sham_shui_po",
+    "cx": 844.1,
+    "cy": 599.3,
+    "labelX": 878.1514,
+    "labelY": 456.2044,
+    "labelAnchorEnd": false,
+    "label": "Sha Tin"
+  },
+  {
+    "location": "sha_tin",
+    "cx": 857.1,
+    "cy": 459.2,
+    "labelX": 849.1041,
+    "labelY": 579.3079,
+    "labelAnchorEnd": true,
+    "label": "Sham Shui Po"
+  },
+  {
+    "location": "tai_po",
+    "cx": 849.1,
+    "cy": 288.1,
+    "labelX": 871.1436,
+    "labelY": 291.0638,
+    "labelAnchorEnd": false,
+    "label": "Tai Po"
+  },
+  {
+    "location": "tap_mun",
+    "cx": 1293.8,
+    "cy": 232,
+    "labelX": 1311.8535,
+    "labelY": 234.0218,
+    "labelAnchorEnd": false,
+    "label": "Tap Mun"
+  },
+  {
+    "location": "tsueng_kwan_o",
+    "cx": 1045.4,
+    "cy": 615.3,
+    "labelX": 1021.377,
+    "labelY": 592.3187,
+    "labelAnchorEnd": false,
+    "label": "Tseung Kwan O"
+  },
+  {
+    "location": "tsuen_wan",
+    "cx": 730.9,
+    "cy": 485.2,
+    "labelX": 730.9186,
+    "labelY": 465.95,
+    "labelAnchorEnd": false,
+    "label": "Tsuen Wan"
+  },
+  {
+    "location": "tuen_mun",
+    "cx": 413.4,
+    "cy": 436.2,
+    "labelX": 419.416,
+    "labelY": 418.1688,
+    "labelAnchorEnd": false,
+    "label": "Tuen Mun"
+  },
+  {
+    "location": "tung_chung",
+    "cx": 328.3,
+    "cy": 696.4,
+    "labelX": 309.2568,
+    "labelY": 738.4437,
+    "labelAnchorEnd": false,
+    "label": "Tung Chung"
+  },
+  {
+    "location": "yuen_long",
+    "cx": 509.6,
+    "cy": 285.1,
+    "labelX": 529.6025,
+    "labelY": 289.0618,
+    "labelAnchorEnd": false,
+    "label": "Yuen Long"
+  }
+]
