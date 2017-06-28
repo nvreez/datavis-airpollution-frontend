@@ -28,3 +28,7 @@
 .ta-e {
   text-anchor: end;
 }
+
+.polygons {
+  fill: none;
+}
