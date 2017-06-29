@@ -13,7 +13,9 @@ class Intro extends Component {
         height: 1100,
       },
       context: {},
-      data: locations
+      data: locations.map(location => {
+        return Object.assign({mean: 0, min: 0, max: 0, stdDev: 0}, location);
+      }),
     };
     this.radius = .3;
     this.onImgLoad = this.onImgLoad.bind(this);
@@ -38,8 +40,8 @@ class Intro extends Component {
 
 
   dateType(d) {
-    return locations.map(location => {
-      return Object.assign(d[location.location], location);
+    return this.state.data.map(location => {
+      return Object.assign(location, d[location.location]);
     });
   }
 
@@ -59,7 +61,7 @@ class Intro extends Component {
     return this.context.append("g")
         .attr("class", "locations")
       .selectAll("circle")
-      .data(locations)
+      .data(this.state.data)
       .enter().append("circle")
         .attr("r", this.radius + 'em')
         .attr("cx", d => { return d.cx * this.state.dimensions.width; })
@@ -70,7 +72,7 @@ class Intro extends Component {
     return this.context.append("g")
         .attr("class", "labels")
       .selectAll("text")
-      .data(locations)
+      .data(this.state.data)
       .enter().append("text")
         .text(d => { return d.label; })
         .attr("text-anchor", d => { return d.labelAnchorEnd ? 'end' : 'start'; })
@@ -87,25 +89,37 @@ class Intro extends Component {
   }
 
   createPolygons(data) {
-    return this.context.append("g")
+    this.context.append("defs")
         .attr("class", "polygons")
-      .selectAll("path")
+      .selectAll("clipPath")
       .data(this.voronoi.polygons(data))
-      .enter().append("path")
-      .attr("d", function(d) { return d ? "M" + d.join("L") + "Z" : null; })
-      .style("fill", d => { return this.colorScale(d.data.mean || 0); })
-      .style("opacity", d => { return d.data.mean / 12 || 0; });
+      .enter().append("clipPath")
+        .attr("id", function(d,i) { return "clip" + i; })
+        .append("path")
+        .attr("d", function(d) { return d ? "M" + d.join("L") + "Z" : null; });
+
+    return this.context.append("g")
+        .attr("class", "circles")
+      .selectAll("circle")
+      .data(data)
+      .enter().append("circle")
+        .attr("r", 0.12 * this.state.dimensions.width)
+        .attr("cx", d => { return d.cx * this.state.dimensions.width; })
+        .attr("cy", d => { return d.cy * this.state.dimensions.height; })
+        .attr("clip-path", function(d,i) { return "url(#clip" + i + ")"; })
+        .style("fill", d => { return this.colorScale(d.mean || 0); })
+        .style("opacity", d => { return d.mean / 12; });
   }
 
   updatePolygons(data) {
-    return this.context.select(".polygons")
-      .selectAll("path")
+    return this.context.select(".circles")
+      .selectAll("circle")
       .data(this.voronoi.polygons(data))
       .transition()
       .style("fill", d => { return this.colorScale(d.data.mean); })
       .style("opacity", d => {
-        console.log("MapOverview.js:107", d.data.mean / 20 );
-        return d.data.mean / 20; });
+        console.log("MapOverview.js:107", d.data );
+        return d.data.mean / 12; });
   }
 
   colorPolygon(polygon) {
