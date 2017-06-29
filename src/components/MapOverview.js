@@ -20,13 +20,34 @@ class Intro extends Component {
     this.radius = .3;
     this.onImgLoad = this.onImgLoad.bind(this);
     this.colorScale = d3.scaleLinear()
-      .domain([0, 7, 11])
-      .range(["#35B9FF", "#8C7E5E", "#532C13"])
+      .domain([0, 4, 6, 9, 11])
+      .range(["#00BAC4", "#FFFF8C", "#D7191C", "#670091", "#2D0513"])
       .interpolate(d3.interpolateHcl)
   }
 
   componentDidMount() {
     this.context = d3.select(this.chart);
+    this.contextDefs = this.context.append("defs");
+
+    var filter = this.contextDefs
+      .append("filter")
+        .attr("id", "blur")
+      .append("feGaussianBlur")
+        .attr("stdDeviation", 20);
+
+    //Append a linearGradient element to the defs and give it a unique id
+    var linearGradient = this.contextDefs.append("linearGradient")
+      .attr("id", "aqhi-legend")
+      .attr("x1", "-5%").attr("y1", "0%")
+      .attr("x2", "105%").attr("y2", "0%")
+      .selectAll("stop")
+      .data(d3.range(11))
+      .enter().append("stop")
+      .attr("offset", (d, i) => { return i / 11; })
+      .attr("stop-color", (d, i) => { return this.colorScale( i ); });
+
+
+
     this.voronoi = this.createVoronoi();
 
 
@@ -89,7 +110,7 @@ class Intro extends Component {
   }
 
   createPolygons(data) {
-    this.context.append("defs")
+    this.contextDefs
         .attr("class", "polygons")
       .selectAll("clipPath")
       .data(this.voronoi.polygons(data))
@@ -100,15 +121,16 @@ class Intro extends Component {
 
     return this.context.append("g")
         .attr("class", "circles")
+        .attr("filter", "url(#blur)")
       .selectAll("circle")
       .data(data)
       .enter().append("circle")
-        .attr("r", 0.12 * this.state.dimensions.width)
+        .attr("r", 0.09 * this.state.dimensions.width)
         .attr("cx", d => { return d.cx * this.state.dimensions.width; })
         .attr("cy", d => { return d.cy * this.state.dimensions.height; })
         .attr("clip-path", function(d,i) { return "url(#clip" + i + ")"; })
         .style("fill", d => { return this.colorScale(d.mean || 0); })
-        .style("opacity", d => { return d.mean / 12; });
+        .style("opacity", d => { return d.mean / 11; });
   }
 
   updatePolygons(data) {
@@ -119,7 +141,7 @@ class Intro extends Component {
       .style("fill", d => { return this.colorScale(d.data.mean); })
       .style("opacity", d => {
         console.log("MapOverview.js:107", d.data );
-        return d.data.mean / 12; });
+        return d.data.mean / 11; });
   }
 
   colorPolygon(polygon) {
@@ -127,6 +149,49 @@ class Intro extends Component {
     polygon.style("fill", d => {
           return this.colorScale(d.data.mean);
         });
+  }
+
+  createLegend() {
+    var legendWidth = Math.min(this.state.dimensions.width / 2, 300);
+
+    //Color Legend container
+    var legendsvg = this.context.append("g")
+      .attr("class", "legendWrapper")
+      .attr("transform-origin", "right")
+      .attr("transform", "translate(" + (this.state.dimensions.width - legendWidth / 1.25) + "," + (this.state.dimensions.height * 0.9) + ")");
+
+    //Draw the Rectangle
+    legendsvg.append("rect")
+      .attr("class", "legendRect")
+      .attr("x", -legendWidth/2)
+      .attr("y", 0)
+      .attr("rx", 8/2)
+      .attr("width", legendWidth)
+      .attr("height", 8)
+      .style("fill", "url(#aqhi-legend)");
+
+    //Append title
+    legendsvg.append("text")
+      .attr("class", "legendTitle")
+      .attr("x", 0)
+      .attr("y", -10)
+      .style("text-anchor", "middle")
+      .text("Air Quality Health Index (AQHI)");
+
+    //Set scale for x-axis
+    var xScale = d3.scaleLinear()
+       .range([-legendWidth/2, legendWidth/2])
+       .domain([0.7, 10.3] );
+
+    //Define x-axis
+    var xAxis = d3.axisBottom(xScale)
+        .tickValues([1,2,3,4,5,6,7,8,9,10]);
+
+    //Set up X axis
+    legendsvg.append("g")
+      .attr("class", "axis")
+      .attr("transform", "translate(0, 4)")
+      .call(xAxis);
   }
 
   onImgLoad({target:img}) {
@@ -141,6 +206,7 @@ class Intro extends Component {
       this.createPolygons(this.state.data);
       this.createPoints();
       this.createLabels();
+      this.createLegend();
     });
   }
 
