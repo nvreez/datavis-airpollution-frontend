@@ -14,26 +14,40 @@ class Intro extends Component {
       },
       context: {},
       data: locations.map(location => {
-        return Object.assign({mean: 0, min: 0, max: 0, stdDev: 0}, location);
+        return Object.assign({mean: 10 * Math.random(), min: 0, max: 0, stdDev: 0}, location);
       }),
     };
-    this.radius = .3;
+    this.radius = .2;
     this.onImgLoad = this.onImgLoad.bind(this);
     this.colorScale = d3.scaleLinear()
-      .domain([0, 4, 6, 9, 11])
-      .range(["#00BAC4", "#FFFF8C", "#D7191C", "#670091", "#2D0513"])
+      .domain([0, 4, 7, 9, 11])
+      .range(["#00BAC4", "#FFFF8C", "#D7191C", "#59091E", "#1C1014"])
       .interpolate(d3.interpolateHcl)
   }
 
   componentDidMount() {
+    this.setState({
+      dimensions: {
+        height: this.chart.clientHeight,
+        width: this.chart.clientWidth
+      }
+    }, function(){
+      this.setViewbox();
+      this.blur = this.contextDefs
+        .append("filter")
+          .attr("id", "blur")
+        .append("feGaussianBlur")
+          .attr("stdDeviation", 0.022 * this.state.dimensions.width);
+      this.voronoi = this.createVoronoi();
+      this.createPolygons(this.state.data);
+      this.createPoints();
+      this.createLabels();
+      this.createLegend();
+    });
+
     this.context = d3.select(this.chart);
     this.contextDefs = this.context.append("defs");
 
-    var filter = this.contextDefs
-      .append("filter")
-        .attr("id", "blur")
-      .append("feGaussianBlur")
-        .attr("stdDeviation", 20);
 
     //Append a linearGradient element to the defs and give it a unique id
     var linearGradient = this.contextDefs.append("linearGradient")
@@ -55,6 +69,7 @@ class Intro extends Component {
       data = this.dateType(data[0]);
 
       this.setState({data});
+      // this.updatePoints(data);
       this.updatePolygons(data);
     });
   }
@@ -62,6 +77,7 @@ class Intro extends Component {
 
   dateType(d) {
     return this.state.data.map(location => {
+      // return location;
       return Object.assign(location, d[location.location]);
     });
   }
@@ -85,8 +101,17 @@ class Intro extends Component {
       .data(this.state.data)
       .enter().append("circle")
         .attr("r", this.radius + 'em')
+        // .style("fill", d => { return this.colorScale(d.mean || 0); })
         .attr("cx", d => { return d.cx * this.state.dimensions.width; })
         .attr("cy", d => { return d.cy * this.state.dimensions.height; });
+  }
+
+  updatePoints() {
+    return this.context.select(".locations")
+      .selectAll("circle")
+      .data(this.state.data)
+      .transition()
+        .style("fill", d => { return this.colorScale(d.mean || 0); });
   }
 
   createLabels() {
@@ -119,18 +144,55 @@ class Intro extends Component {
         .append("path")
         .attr("d", function(d) { return d ? "M" + d.join("L") + "Z" : null; });
 
+    var links = {};
+    this.voronoi.links(data).map(link => {
+      var distance = Math.sqrt(
+        (link.source.cx - link.target.cx) * (link.source.cx - link.target.cx)
+          + (link.source.cy - link.target.cy) * (link.source.cy - link.target.cy)
+        );
+
+      links[link.source.location] = links[link.source.location] || {
+        links: [],
+        min: distance,
+        max: distance,
+        avarage: 0
+      };
+      links[link.target.location] = links[link.target.location] || {
+        links: [],
+        min: distance,
+        max: distance,
+        avarage: 0
+      };
+      links[link.source.location].min = Math.min(links[link.source.location].min, distance);
+      links[link.target.location].min = Math.min(links[link.target.location].min, distance);
+      links[link.source.location].max = Math.max(links[link.source.location].max, distance);
+      links[link.target.location].max = Math.max(links[link.target.location].max, distance);
+      links[link.source.location].links.push(distance);
+      links[link.target.location].links.push(distance);
+    });
+
+    for (var [key, value] of Object.entries(links)) {
+      links[key].avarage = value.links.reduce((a,b) => { return a + b;}) / value.links.length;
+    }
+    console.log("MapOverview.js:155", links);
+
+
     return this.context.append("g")
         .attr("class", "circles")
         .attr("filter", "url(#blur)")
       .selectAll("circle")
       .data(data)
       .enter().append("circle")
-        .attr("r", 0.09 * this.state.dimensions.width)
+        .attr("r", d => {
+          var constrainedSize = Math.min(0.22, Math.max(0.1, links[d.location].max));
+          return constrainedSize * this.state.dimensions.width / 2;
+        })
+        // .attr("r", 0.09 * this.state.dimensions.width)
         .attr("cx", d => { return d.cx * this.state.dimensions.width; })
         .attr("cy", d => { return d.cy * this.state.dimensions.height; })
         .attr("clip-path", function(d,i) { return "url(#clip" + i + ")"; })
         .style("fill", d => { return this.colorScale(d.mean || 0); })
-        .style("opacity", d => { return d.mean / 11; });
+        .style("opacity", d => { return d.mean / 12 + 0.2; });
   }
 
   updatePolygons(data) {
@@ -139,13 +201,10 @@ class Intro extends Component {
       .data(this.voronoi.polygons(data))
       .transition()
       .style("fill", d => { return this.colorScale(d.data.mean); })
-      .style("opacity", d => {
-        console.log("MapOverview.js:107", d.data );
-        return d.data.mean / 11; });
+      .style("opacity", d => { return d.data.mean / 12 + 0.2; });
   }
 
   colorPolygon(polygon) {
-    console.log("MapOverview.js:107", this);
     polygon.style("fill", d => {
           return this.colorScale(d.data.mean);
         });
@@ -214,7 +273,7 @@ class Intro extends Component {
   render() {
     return (
       <figure className="map">
-        <img className="map-img" src={hkMap} alt="Map of Hong Kong" onLoad={this.onImgLoad} />
+        <img className="map-img" src={hkMap} alt="Map of Hong Kong" />
         <svg className="map-locations"
           xmlns="http://www.w3.org/2000/svg"
           viewBox={`0 0 ${this.state.dimensions.width} ${this.state.dimensions.height}`}

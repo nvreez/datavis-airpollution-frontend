@@ -3,40 +3,28 @@
   margin: 0 calc(-4em + 4vw) 0 calc(-4em - 4vw);
   position: relative;
   height: auto;
-  z-index: -1;
 }
 
-.map-img,
-.map-locations {
+.map-img {
   position: absolute;
   left: 0;
   right: 0;
+  z-index: -1;
 }
 
 .map-locations {
   font-size: calc(0.7em + 0.25vw)
 }
 
-.map-data ellipse {
-  stroke: #454545;
+.locations circle:hover {
+  stroke: #000;
+  stroke-width: 0.05em;
+  stroke-opacity: 0.1;
 }
-
-.map-data text {
-  fill: #000;
-}
-
-.ta-e {
-  text-anchor: end;
-}
-
-.polygons {
-  fill: none;
-}
-
 
 .axis path,
 .axis tick,
 .axis line {
-    fill: none;
-    stroke: none;
+  fill: none;
+  stroke: none;
 }
