@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import * as d3 from "d3";
+import { select as d3Select } from 'd3-selection';
 import hkMap from './hk-map.svg';
 import locations from "./locations.json";
 import './MapOverview.css';
@@ -18,11 +19,14 @@ class Intro extends Component {
       }),
     };
     this.radius = .2;
-    this.onImgLoad = this.onImgLoad.bind(this);
     this.colorScale = d3.scaleLinear()
       .domain([0, 4, 7, 9, 11])
       .range(["#00BAC4", "#FFFF8C", "#D7191C", "#59091E", "#1C1014"])
       .interpolate(d3.interpolateHcl)
+
+    this.voronoi = this.createVoronoi(this.state.dimensions.width, this.state.dimensions.height);
+    this.voronoiPolygons = this.voronoi.polygons(this.state.data);
+    this.voronoiLinks = this.createLinks(this.voronoi, this.state.data);
   }
 
   componentDidMount() {
@@ -32,45 +36,18 @@ class Intro extends Component {
         width: this.chart.clientWidth
       }
     }, function(){
-      this.setViewbox();
-      this.blur = this.contextDefs
-        .append("filter")
-          .attr("id", "blur")
-        .append("feGaussianBlur")
-          .attr("stdDeviation", 0.022 * this.state.dimensions.width);
-      this.voronoi = this.createVoronoi();
-      this.createPolygons(this.state.data);
-      this.createPoints();
-      this.createLabels();
-      this.createLegend();
+      this.voronoi = this.createVoronoi(this.state.dimensions.width, this.state.dimensions.height);
+      this.voronoiPolygons = this.voronoi.polygons(this.state.data);
+      this.voronoiLinks = this.createLinks(this.voronoi, this.state.data);
     });
 
     this.context = d3.select(this.chart);
     this.contextDefs = this.context.append("defs");
 
-
-    //Append a linearGradient element to the defs and give it a unique id
-    var linearGradient = this.contextDefs.append("linearGradient")
-      .attr("id", "aqhi-legend")
-      .attr("x1", "-5%").attr("y1", "0%")
-      .attr("x2", "105%").attr("y2", "0%")
-      .selectAll("stop")
-      .data(d3.range(11))
-      .enter().append("stop")
-      .attr("offset", (d, i) => { return i / 11; })
-      .attr("stop-color", (d, i) => { return this.colorScale( i ); });
-
-
-
-    this.voronoi = this.createVoronoi();
-
-
     d3.json("http://127.0.0.1:8088/api/pollution-records?from=20170401&to=20170401&granularity=24", (error, data) => {
       data = this.dateType(data[0]);
 
       this.setState({data});
-      // this.updatePoints(data);
-      this.updatePolygons(data);
     });
   }
 
@@ -82,71 +59,17 @@ class Intro extends Component {
     });
   }
 
-  setViewbox() {
-    this.context.select('svg')
-      .attr("viewBox", `0 0 ${this.state.dimensions.width} ${this.state.dimensions.height}`);
-  }
-
-  createVoronoi() {
+  createVoronoi(width, height) {
     return d3.voronoi()
-      .extent([[-1,-1], [this.state.dimensions.width, this.state.dimensions.height]])
-      .x(d => { return d.cx * this.state.dimensions.width; })
-      .y(d => { return d.cy * this.state.dimensions.height; });
+      .extent([[-1,-1], [width, height]])
+      .x(d => { return d.cx * width; })
+      .y(d => { return d.cy * height; });
   }
 
-  createPoints() {
-    return this.context.append("g")
-        .attr("class", "locations")
-      .selectAll("circle")
-      .data(this.state.data)
-      .enter().append("circle")
-        .attr("r", this.radius + 'em')
-        // .style("fill", d => { return this.colorScale(d.mean || 0); })
-        .attr("cx", d => { return d.cx * this.state.dimensions.width; })
-        .attr("cy", d => { return d.cy * this.state.dimensions.height; });
-  }
-
-  updatePoints() {
-    return this.context.select(".locations")
-      .selectAll("circle")
-      .data(this.state.data)
-      .transition()
-        .style("fill", d => { return this.colorScale(d.mean || 0); });
-  }
-
-  createLabels() {
-    return this.context.append("g")
-        .attr("class", "labels")
-      .selectAll("text")
-      .data(this.state.data)
-      .enter().append("text")
-        .text(d => { return d.label; })
-        .attr("text-anchor", d => { return d.labelAnchorEnd ? 'end' : 'start'; })
-        .attr("x", d => { return d.cx * this.state.dimensions.width; })
-        .attr("y", d => { return d.cy * this.state.dimensions.height; })
-        .attr("dx", d => {
-          var delta = d.labelX + this.radius * Math.sign(d.labelX);
-          return delta + 'em';
-        })
-        .attr("dy", d => {
-          var delta = d.labelY + this.radius * Math.sign(d.labelY);
-          return delta + 'em';
-        });
-  }
-
-  createPolygons(data) {
-    this.contextDefs
-        .attr("class", "polygons")
-      .selectAll("clipPath")
-      .data(this.voronoi.polygons(data))
-      .enter().append("clipPath")
-        .attr("id", function(d,i) { return "clip" + i; })
-        .append("path")
-        .attr("d", function(d) { return d ? "M" + d.join("L") + "Z" : null; });
-
-    var links = {};
-    this.voronoi.links(data).map(link => {
-      var distance = Math.sqrt(
+  createLinks(voronoi, data) {
+    let links = {};
+    voronoi.links(data).map(link => {
+      let distance = Math.sqrt(
         (link.source.cx - link.target.cx) * (link.source.cx - link.target.cx)
           + (link.source.cy - link.target.cy) * (link.source.cy - link.target.cy)
         );
@@ -171,106 +94,69 @@ class Intro extends Component {
       links[link.target.location].links.push(distance);
     });
 
-    for (var [key, value] of Object.entries(links)) {
+    for (let [key, value] of Object.entries(links)) {
       links[key].avarage = value.links.reduce((a,b) => { return a + b;}) / value.links.length;
     }
-    console.log("MapOverview.js:155", links);
 
-
-    return this.context.append("g")
-        .attr("class", "circles")
-        .attr("filter", "url(#blur)")
-      .selectAll("circle")
-      .data(data)
-      .enter().append("circle")
-        .attr("r", d => {
-          var constrainedSize = Math.min(0.22, Math.max(0.1, links[d.location].max));
-          return constrainedSize * this.state.dimensions.width / 2;
-        })
-        // .attr("r", 0.09 * this.state.dimensions.width)
-        .attr("cx", d => { return d.cx * this.state.dimensions.width; })
-        .attr("cy", d => { return d.cy * this.state.dimensions.height; })
-        .attr("clip-path", function(d,i) { return "url(#clip" + i + ")"; })
-        .style("fill", d => { return this.colorScale(d.mean || 0); })
-        .style("opacity", d => { return d.mean / 12 + 0.2; });
+    return links;
   }
 
-  updatePolygons(data) {
-    return this.context.select(".circles")
-      .selectAll("circle")
-      .data(this.voronoi.polygons(data))
-      .transition()
-      .style("fill", d => { return this.colorScale(d.data.mean); })
-      .style("opacity", d => { return d.data.mean / 12 + 0.2; });
-  }
+  render() {
+    const colourScale = [];
+    for (var i=0; i < 11; i++) {
+        colourScale.push(<stop offset={i / 11} key={i / 11} stopColor={this.colorScale( i )} />);
+    }
 
-  colorPolygon(polygon) {
-    polygon.style("fill", d => {
-          return this.colorScale(d.data.mean);
-        });
-  }
+    const voronoiPolygons = [];
+    for (var i=0; i < this.voronoiPolygons.length; i++) {
+      voronoiPolygons.push(<clipPath id={"clip" + i} key={"clip" + i}>
+          <path d={this.voronoiPolygons[i] ? "M" + this.voronoiPolygons[i].join("L") + "Z" : null} />
+        </clipPath>);
+    }
 
-  createLegend() {
-    var legendWidth = Math.min(this.state.dimensions.width / 2, 300);
+    const locationValues = this.state.data.map((location, i) => {
+      var constrainedSize = Math.min(0.22, Math.max(0.1, this.voronoiLinks[location.location].max));
+      return {
+        radius: constrainedSize * this.state.dimensions.width / 2,
+        x: location.cx * this.state.dimensions.width,
+        y: location.cy * this.state.dimensions.height,
+        clipPath: "url(#clip" + i + ")",
+        fill: this.colorScale(location.mean || 0),
+        opacity: location.mean / 12 + 0.2,
+        key: location.label,
+      }
+    })
 
-    //Color Legend container
-    var legendsvg = this.context.append("g")
-      .attr("class", "legendWrapper")
-      .attr("transform-origin", "right")
-      .attr("transform", "translate(" + (this.state.dimensions.width - legendWidth / 1.25) + "," + (this.state.dimensions.height * 0.9) + ")");
 
-    //Draw the Rectangle
-    legendsvg.append("rect")
-      .attr("class", "legendRect")
-      .attr("x", -legendWidth/2)
-      .attr("y", 0)
-      .attr("rx", 8/2)
-      .attr("width", legendWidth)
-      .attr("height", 8)
-      .style("fill", "url(#aqhi-legend)");
+    const locationPoints = this.state.data.map(locationPoint => {
+      return {
+        x: locationPoint.cx * this.state.dimensions.width,
+        y: locationPoint.cy * this.state.dimensions.height,
+      }
+    });
 
-    //Append title
-    legendsvg.append("text")
-      .attr("class", "legendTitle")
-      .attr("x", 0)
-      .attr("y", -10)
-      .style("text-anchor", "middle")
-      .text("Air Quality Health Index (AQHI)");
+    const locationNames = this.state.data.map(locationName => {
+      return {
+        label: locationName.label,
+        textAnchor: locationName.labelAnchorEnd ? 'end' : 'start',
+        x: locationName.cx * this.state.dimensions.width,
+        y: locationName.cy * this.state.dimensions.height,
+        dx: locationName.labelX + this.radius * Math.sign(locationName.labelX),
+        dy: locationName.labelY + this.radius * Math.sign(locationName.labelY),
+      }
+    });
+
+    const legendWidth = Math.min(this.state.dimensions.width / 2, 300);
 
     //Set scale for x-axis
-    var xScale = d3.scaleLinear()
+    const legendScale = d3.scaleLinear()
        .range([-legendWidth/2, legendWidth/2])
        .domain([0.7, 10.3] );
 
     //Define x-axis
-    var xAxis = d3.axisBottom(xScale)
+    const legendAxis = d3.axisBottom(legendScale)
         .tickValues([1,2,3,4,5,6,7,8,9,10]);
 
-    //Set up X axis
-    legendsvg.append("g")
-      .attr("class", "axis")
-      .attr("transform", "translate(0, 4)")
-      .call(xAxis);
-  }
-
-  onImgLoad({target:img}) {
-    this.setState({
-      dimensions: {
-        height:img.height,
-        width:img.width
-      }
-    }, function(){
-      this.setViewbox();
-      this.voronoi = this.createVoronoi();
-      this.createPolygons(this.state.data);
-      this.createPoints();
-      this.createLabels();
-      this.createLegend();
-    });
-  }
-
-
-  render() {
     return (
       <figure className="map">
         <img className="map-img" src={hkMap} alt="Map of Hong Kong" />
@@ -278,7 +164,81 @@ class Intro extends Component {
           xmlns="http://www.w3.org/2000/svg"
           viewBox={`0 0 ${this.state.dimensions.width} ${this.state.dimensions.height}`}
           preserveAspectRatio="xMinYMin meet"
-          ref={(c) => { this.chart = c; }}></svg>
+          ref={(c) => { this.chart = c; }}>
+
+          <defs className="definitions">
+            <filter id="blur">
+              <feGaussianBlur stdDeviation={0.022 * this.state.dimensions.width} />
+            </filter>
+            <linearGradient id="aqhi-legend" x1="-5%" x2="105%" y1="0%" y2="0%">
+              {colourScale}
+            </linearGradient>
+            {voronoiPolygons}
+          </defs>
+
+          <g className="locationValues" filter="url(#blur)">
+            {locationValues.map(locationValue => (
+              <circle
+                r={locationValue.radius}
+                cx={locationValue.x}
+                cy={locationValue.y}
+                clipPath={locationValue.clipPath}
+                fill={locationValue.fill}
+                opacity={locationValue.opacity}
+                key={locationValue.key}
+              />
+            ))}
+          </g>
+
+          <g className="locationPoints">
+            {locationPoints.map(locationPoint => (
+              <circle
+                cx={locationPoint.x}
+                cy={locationPoint.y}
+                key={`${locationPoint.x},${locationPoint.y}`}
+                r={this.radius + 'em'}
+              />
+            ))}
+          </g>
+
+          <g className="locationNames">
+            {locationNames.map(locationName => (
+              <text
+                x={locationName.x}
+                y={locationName.y}
+                dx={locationName.dx + 'em'}
+                dy={locationName.dy + 'em'}
+                key={locationName.label}
+                textAnchor={locationName.textAnchor}>
+                {locationName.label}
+              </text>
+            ))}
+          </g>
+
+          <g
+            className="legendWrapper"
+            // transformOrigin="right"
+            transform={"translate(" + (this.state.dimensions.width - legendWidth / 1.25) + "," + (this.state.dimensions.height * 0.9) + ")"}>
+            <rect
+              className="legendRect"
+              x={-legendWidth/2}
+              y="0"
+              rx="4"
+              width={legendWidth}
+              height="8"
+              fill="url(#aqhi-legend)"/>
+            <text
+              className="legendTitle"
+              x="0"
+              y="-10"
+              textAnchor="middle">
+              Air Quality Health Index (AQHI)
+            </text>
+            <g className="legendAxis"
+              transform="translate(0, 4)"
+              ref={node => d3Select(node).call(legendAxis)} />
+          </g>
+        </svg>
       </figure>
     );
   }

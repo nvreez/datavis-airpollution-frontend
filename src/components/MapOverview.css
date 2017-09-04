@@ -22,9 +22,9 @@
   stroke-opacity: 0.1;
 }
 
-.axis path,
-.axis tick,
-.axis line {
+.legendAxis path,
+.legendAxis tick,
+.legendAxis line {
   fill: none;
   stroke: none;
 }
